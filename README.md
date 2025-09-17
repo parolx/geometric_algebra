@@ -1,6 +1,6 @@
 # Geometric Algebra and Tensors (geometric_algebra)
 
-Compact header-only with no dependencies C++20 geometric algebra library with support for euclidean-type, minkovsky-type, projection and conformal spaces.
+Compact header-only with no dependencies C++20 geometric algebra library with support for Euclidean-type, Minkovsky-type, projection and conformal spaces.
 
 These less than 2 thousand lines of code unveil the power of geometric algebra, which rapidly becomes popularity. 
 
@@ -25,7 +25,7 @@ Basis elements BElem<Space> use effective bit representation, which allows up to
 
 - Grassmann left and right complement: !be, ~be
 - Inner product, basis elements belong to the same space, or to space and co-space: be1 | be2
-- Outer ptoduct, basis elements belong to the same space, or to space and co-space: be1 ^ be2
+- Outer product, basis elements belong to the same space, or to space and co-space: be1 ^ be2
 - Geometric product, basis elements belong to the same space, or to space and co-space: be1 * be2
 - Linear transformation: Matrix * be
 
@@ -37,10 +37,10 @@ Multi-vectors MVect<Space> are implemented as map of basis elements to correspon
 - Hat involution: mv.Hat()
 - Reversion: mv.Rev()
 - Clifford conjugation: mv.Conj()
-- Representtion in co-space: mv.CoMVect()
-- Left and right complement: !mv, ~mv
+- Representation in co-space: mv.CoMVect()
+- Left and right complement: mv, ~mv
 - Negative: -mv
-- Addition and substraction: mv1 + mv2, mv1 - mv2
+- Addition and subtraction: mv1 + mv2, mv1 - mv2
 - Multiplication and division by factor: mv1 * factor, mv1 / factor
 - Interior product, multi-vectors belong to the same space, or to space and co-space: mv1 | mv2
 - Exterior product, multi-vectors belong to the same space, or to space and co-space: mv1 ^ mv2
@@ -58,11 +58,11 @@ Tensors are here to implement linear transformations and multi-vector inversions
 **Note:** tensor interface is not jet stable and may be subject to change.
 
 - **SubTensor**
-  - Access to tensor components, mainly to have a possibility to access elements like in multi-dimansion array, like: t[i][j][k]
+  - Access to tensor components, mainly to have a possibility to access elements like in multi-dimensional array, like: t[i][j][k]
   - New tensor can be constructed from any sub-tensor: t2(t1[i][j])
 - **Tensor** supports arbitrary number of upper and lower indices and following operations:
   - Negative: -t
-  - Addition and substraction: t1 + t2, t1 - t2
+  - Addition and subtraction: t1 + t2, t1 - t2
   - Multiplication and division by factor: t1 * factor, t1 / factor
   - Tensor product, convolution last index t1 and first index t2, one of them should be upper, another - lower: t1 * t2
 - **Vector** is Tensor with 1 index, upper or lower
@@ -73,7 +73,7 @@ Tensors are here to implement linear transformations and multi-vector inversions
   
 ## Applications
 
-Geometric algebra enormoulsy simplifies many non-trivial calculations in arbitrary spaces. Here are only some examples of what is possible.
+Geometric algebra enormously simplifies many non-trivial calculations in arbitrary spaces. Here are only some examples of what is possible.
 
 ### Reflections
 

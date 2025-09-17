@@ -47,40 +47,19 @@ template<nat D, typename R> struct SubTensor
   /**  Constructor.  */
   SubTensor(int const* s, R* b): m_dims(s), m_data(b) {;}
   /**  Access to sub-sub-tensor.  */
-  SubTensor<D-1,R> operator[](nat n) const {return {m_dims+1, m_data+n*m_dims[2*D-2]};}
-  /**  Direct access to tensor value.  */
-  const R& operator()(nat n) const {return m_data[n];}
-  /**  Size of certain dimension.  */
-  int DSize(nat d, bool bSigned=false) const {return bSigned? m_dims[d] : std::abs(m_dims[d]);}
-private:
-  int const* m_dims;          ///< Pointer to array with sizes of sub-tensor dimensions.
-  R* m_data;                  ///< Pointer to tensor data.
-};
-/** Vector-like sub-tensor, direct access to components.  */
-template<typename R> struct SubTensor<1,R>
-{
-  /**  Constructor.  */
-  SubTensor(int const* s, R* b): m_dims(s), m_data(b) {;}
+  SubTensor<D-1,R> operator[](nat n) requires (D > 1) {return {m_dims+1, m_data+n*m_dims[2*D-2]};}
   /**  Access to sub-sub-tensor.  */
-  R& operator[](nat n) const {return m_data[n];}
+  SubTensor<D-1,const R> operator[](nat n) const requires (D > 1) {return {m_dims+1, m_data+n*m_dims[2*D-2]};}
+  /** Access to components. */
+  R& operator[](nat n) requires (D == 1) {return m_data[n];}
+  /** Access to components. */
+  const R& operator[](nat n) const requires (D == 1) {return m_data[n];}
   /**  Direct access to tensor value.  */
   const R& operator()(nat n) const {return m_data[n];}
   /**  Size of certain dimension.  */
   int DSize(nat d, bool bSigned=false) const {return bSigned? m_dims[d] : std::abs(m_dims[d]);}
 private:
   int const* m_dims;          ///< Pointer to array with sizes of sub-tensor dimensions.
-  R* m_data;                  ///< Pointer to tensor data.
-};
-/** Last sub-tensor, access to single scalar.  */
-template<typename R> struct SubTensor<0,R>
-{
-  /**  Constructor.  */
-  SubTensor(int const* s, R* b): m_data(b) {;}
-  /**  Dimension 0 - access to single scalar.  */
-  operator R&() const {return *m_data;}
-  /**  Size of certain dimension.  */
-  int DSize(nat d, bool bSigned=false) const {return 0;}
-private:
   R* m_data;                  ///< Pointer to tensor data.
 };
 ///@}
@@ -138,9 +117,17 @@ public:
   */
   int DSize(nat d, bool bSigned=false) const {return bSigned? m_dims[d] : std::abs(m_dims[d]);}
   /** Access to sub-tensors. */
-  SubTensor<D-1,R> operator[](nat n) {return {std::addressof(m_dims[1]),std::addressof(m_data[n*m_dims[2*D-2]])};}
+  SubTensor<D-1,R> operator[](nat n) requires (D > 1) {return {std::addressof(m_dims[1]),std::addressof(m_data[n*m_dims[2*D-2]])};}
   /** Access to sub-tensors. */
-  SubTensor<D-1,R const> operator[](nat n) const {return {std::addressof(m_dims[1]),std::addressof(m_data[n*m_dims[2*D-2]])};}
+  SubTensor<D-1,R const> operator[](nat n) const requires (D > 1) {return {std::addressof(m_dims[1]),std::addressof(m_data[n*m_dims[2*D-2]])};}
+  /** Access to components. */
+  R& operator[](nat n) requires (D == 1) {return m_data[n];}
+  /** Access to components. */
+  const R& operator[](nat n) const requires (D == 1) {return m_data[n];}
+  /** Dimension 0 - access to single scalar. */
+  operator R&() requires (D < 1) {return *m_data;}
+  /** Dimension 0 - access to single scalar. */
+  operator const R&() const requires (D < 1) {return *m_data;}
   /** Direct access to dimension sizes. */
   const std::array<int,2*D> Dims() const {return m_dims;}
   /** Direct access to tensor data. */

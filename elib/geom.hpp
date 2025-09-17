@@ -61,17 +61,17 @@ public:
     Proj = _Proj,             ///< Amount of projection axes.
     Dim = _Pos+_Neg+_Proj,    ///< Total space dimension.
   };
-  /** Blade grades. */
+  /** Grades. */
   enum grades: nat
   {
-    scalar = 0,               ///< Blade grade of scalar.
-    vect,                     ///< Blade grade of vector.
-    bivect,                   ///< Blade grade of bivector.
-    trivect,                  ///< Blade grade of trivector.
-    pseudotrivect = Dim-3,    ///< Blade grade of pseudo-trivector.
-    pseudobivect = Dim-2,     ///< Blade grade of pseudo-bivector.
-    pseudovect = Dim-1,       ///< Blade grade of pseudo-vector.
-    pseudoscalar = Dim        ///< Blade grade of pseudo-scalar.
+    scalar = 0,               ///< Grade of scalar.
+    vect,                     ///< Grade of vector.
+    bivect,                   ///< Grade of bivector.
+    trivect,                  ///< Grade of trivector.
+    pseudotrivect = Dim-3,    ///< Grade of pseudo-trivector.
+    pseudobivect = Dim-2,     ///< Grade of pseudo-bivector.
+    pseudovect = Dim-1,       ///< Grade of pseudo-vector.
+    pseudoscalar = Dim        ///< Grade of pseudo-scalar.
   };
   /** Starting indices of sub-spaces. */
   enum indices: nat
@@ -85,7 +85,7 @@ public:
   {
     l = 0,                    ///< Scalar 1 basis space element bits. Can be
                               ///<   automatically converted to basis element.
-    I = (1<<Dim)-1            ///< Pseudo-scalar I basis space element bis. Can be
+    I = ((nat)1<<Dim)-1       ///< Pseudo-scalar I basis space element bis. Can be
                               ///<   automatically converted to basis element.
   };
   /**
@@ -130,9 +130,9 @@ public:
   */
   static nat Bits(nat nGrade,nat idx);
   /**
-  Get amount of blade components of given grade.
+  Get amount of components of given grade.
 
-  @param nGrade Blade grade.
+  @param nGrade Grade.
   @return Grade of basis element.
   */
   static nat Components(nat nGrade);
@@ -161,22 +161,27 @@ public:
   @param lst Initialization list.
   @return Point.
   */
-  static MVect<Space> Point(const std::array<R,_Pos+_Neg>& lst = {})
+  static MVect<Space> inline Point(const std::array<R,_Pos+_Neg>& lst = {}) requires (Proj == 1)
   {
     MVect<Space> mv=Vector(lst);
-    if (Proj == 0)
-      throw std::domain_error("Points are defined only in projection spaces.");
-    if (Proj == 1)
-      mv.w(1.0);
-    else
-    {
-      R s2=0.0;
-      nat i=time;
-      for (auto it=lst.cbegin(); (i < Dim) && (it != lst.cend()); ++it,++i)
-        s2 += (*it)*(*it);
-      mv.p(0.5-0.5*s2);
-      mv.n(0.5+0.5*s2);
-    }
+    mv.w(1.0);
+    return mv;
+  }
+  /**
+  Get point in conformal space.
+
+  @param lst Initialization list.
+  @return Point.
+  */
+  static MVect<Space> Point(const std::array<R,_Pos+_Neg>& lst = {}) requires (Proj > 1)
+  {
+    MVect<Space> mv=Vector(lst);
+    R s2=0.0;
+    nat i=time;
+    for (auto it=lst.cbegin(); (i < Dim) && (it != lst.cend()); ++it,++i)
+      s2 += (*it)*(*it);
+    mv.p(0.5-0.5*s2);
+    mv.n(0.5+0.5*s2);
     return mv;
   }
   /**
@@ -184,10 +189,8 @@ public:
 
   @return Point at infinity.
   */
-  static MVect<Space> Infinity()
+  static constexpr MVect<Space> Infinity() requires (Proj > 1)
   {
-    if (Proj < 2)
-      throw std::domain_error("Infinite point exists only in conformal spaces.");
     MVect<Space> mv(2);
     mv.p(-1.0);
     return mv;
@@ -204,7 +207,7 @@ public:
   @tparam _R Type of real values.
   @tparam _Cospace Boolean, true if it is co-space.
   @param nBits Basis element bits.
-  @param nGrade Grade of blade/basis element.
+  @param nGrade Grade of element.
   @param idx Number of basis element of this grade.
   @see    Space<_Pos,_Neg,_Proj,_R>
  */
@@ -272,7 +275,7 @@ template<nat _Pos,nat _Neg,nat _Proj, typename _R, bool _Cospace> nat Space<_Pos
 }
 /*===========================================================================*\
 */ /**
-  Get amount of blade components of given grade.
+  Get amount of components of given grade.
 
   @return Grade of basis element.
 */
@@ -318,7 +321,7 @@ public:
   @param nBits Bit representation of basis element.
   */
   BElem(nat nBits):
-    m_nBits(nBits & ((1<<Sp::Dim)-1)),
+    m_nBits(nBits & Sp::I),
     m_nGrade(Sp::Grade(m_nBits))
   {;}
   /**
@@ -384,23 +387,23 @@ public:
   @param nGrade Grade of elements.
   @param lst Initialization list for elements of this grade.
   */
-  MVect(nat nGrade, const std::initializer_list<R>& lst) { AddBlade(nGrade,lst);}
+  MVect(nat nGrade, const std::initializer_list<R>& lst) { AddGrade(nGrade,lst);}
   /** Multi-vector representation in co-space. */
   MVect<typename Sp::Cospace> CoMVect() const;
   /**
-  Adds blade of certain grade. If elements already exist - they are replaced.
+  Adds components of certain grade. If elements already exist - they are replaced.
 
   @param nGrade Grade of elements.
   @param lst Initialization list for elements of this grade.
   */
-  void AddBlade(nat nGrade, const std::initializer_list<R>& lst);
+  void AddGrade(nat nGrade, const std::initializer_list<R>& lst);
   /**
-  Picks up blade of certain grade.
+  Picks up components of certain grade.
 
   @param nGrade Grade of elements.
-  @return Multi-vector, containing single blade.
+  @return Multi-vector, containing components of certain grade.
   */
-  MVect Blade(nat nGrade) const;
+  MVect Grade(nat nGrade) const;
   /** Calculates inverse multi-vector. */
   MVect Inv() const;
   /** Calculates hat involution of multi-vector. */
@@ -466,27 +469,12 @@ public:
   */
 ///@{
   /** Point weight in projective space. */
-  void w(real val)
-  {
-    if (Sp::Proj != 1)
-      throw std::domain_error("Point weight is used only in projection spaces.");
-    (*this)[BElem<Sp>(Sp::vect,Sp::weight)]=val;
-  }
+  void w(real val) requires (Sp::Proj == 1) {(*this)[BElem<Sp>(Sp::vect,Sp::weight)]=val;}
   /** Positive weight in conformal space. */
-  void p(real val)
-  {
-    if (Sp::Proj < 2)
-      throw std::domain_error("Positive weight exists only in conformal spaces.");
-    (*this)[BElem<Sp>(Sp::vect,Sp::weight)]=val;
-  }
+  void p(real val) requires (Sp::Proj > 1) {(*this)[BElem<Sp>(Sp::vect,Sp::weight)]=val;}
   /** Negative weight in conformal space. */
-  void n(real val)
-  {
-    if (Sp::Proj < 2)
-      throw std::domain_error("Negative weight exists only in conformal spaces.");
-    (*this)[BElem<Sp>(Sp::vect,Sp::weight+1)]=val;
-  }
-  /** Time in Minkovsky space. */
+  void n(real val) requires (Sp::Proj > 1) {(*this)[BElem<Sp>(Sp::vect,Sp::weight+1)]=val;}
+  /** Time in Minkovsky space or equivalent to x coordinate. */
   void t(real val) {(*this)[BElem<Sp>(Sp::vect,Sp::time)]=val;}
   /** X coordinate. */
   void x(real val) {(*this)[BElem<Sp>(Sp::vect,Sp::vect0)]=val;}
@@ -505,40 +493,16 @@ public:
   @name Returns value of certain multi-vector component.
   */
 ///@{
-  /** Point weight in projective and conformal space. */
-  R w() const
-  {
-    if (Sp::Proj < 1)
-      throw std::domain_error("Point weight exists only in projection and conformal spaces.");
-    if (Sp::Proj > 1)
-      return 0.5*(p()+n());
-    auto it=this->find(BElem<Sp>(Sp::vect,Sp::weight));
-    return (it == this->cend()? 0 : it->second);
-  }
+  /** Point weight in projective space. */
+  R w() const requires (Sp::Proj == 1) {auto it=this->find(BElem<Sp>(Sp::vect,Sp::weight)); return (it == this->cend()? 0 : it->second);}
+  /** Point weight in conformal space. */
+  R w() const requires (Sp::Proj > 1) {return p()+n();}
   /** Positive weight in conformal space. */
-  R p() const
-  {
-    if (Sp::Proj < 2)
-      throw std::domain_error("Positive weight exists only in conformal spaces.");
-    BElem<Sp> be(Sp::vect,Sp::weight);
-    auto it=this->find(be);
-    return it == this->cend()? 0 : it->second;
-  }
+  R p() const requires (Sp::Proj > 1) {auto it=this->find(BElem<Sp>(Sp::vect,Sp::weight)); return it == this->cend()? 0 : it->second;}
   /** Negative weight in conformal space. */
-  R n() const
-  {
-    if (Sp::Proj < 2)
-      throw std::domain_error("Negative weight exists only in conformal spaces.");
-    auto it=this->find(BElem<Sp>(Sp::vect,Sp::weight+1));
-    return it == this->cend()? 0 : it->second;
-  }
+  R n() const requires (Sp::Proj > 1) {auto it=this->find(BElem<Sp>(Sp::vect,Sp::weight+1)); return it == this->cend()? 0 : it->second;}
   /** Weight at infinity in conformal space. */
-  R i() const
-  {
-    if (Sp::Proj < 2)
-      throw std::domain_error("Weight at infinity exists only in conformal spaces.");
-    return n()-p();
-  }
+  R i() const requires (Sp::Proj > 1) {return 0.5*(n()-p());}
   /** Time in Minkovsky space. */
   R t() const {auto it=this->find(BElem<Sp>(Sp::vect,Sp::time)); return it == this->cend()? 0 : it->second; }
   /** X coordinate. */
@@ -586,14 +550,14 @@ template<typename Sp> MVect<typename Sp::Cospace> MVect<Sp>::CoMVect() const
 }
 /*===========================================================================*\
 */ /**
-  Adds blade of certain grade. If elements already exist - they are replaced.
+  Adds components of certain grade. If elements already exist - they are replaced.
 
   @tparam Sp Space of multi-vectors.
   @param nGrade Grade of elements.
   @param lst Initialization list for elements of this grade.
   @see    MVect<Sp>
 */
-template<typename Sp> void MVect<Sp>::AddBlade(nat nGrade, const std::initializer_list<R>& lst)
+template<typename Sp> void MVect<Sp>::AddGrade(nat nGrade, const std::initializer_list<R>& lst)
 {
   R r;
   nat i=0;
@@ -610,12 +574,12 @@ template<typename Sp> void MVect<Sp>::AddBlade(nat nGrade, const std::initialize
 }
 /*===========================================================================*\
 */ /**
-  Picks up blade of certain grade.
+  Picks up components of certain grade.
 
   @tparam Sp Space of multi-vectors.
   @param nGrade Grade of elements.
 */
-template<typename Sp> MVect<Sp> MVect<Sp>::Blade(nat nGrade) const
+template<typename Sp> MVect<Sp> MVect<Sp>::Grade(nat nGrade) const
 {
   MVect<Sp> mv;
   for (auto it=this->cbegin(); (it != this->cend()) && (it->first.Grade() <= nGrade); ++it)
@@ -636,28 +600,31 @@ template<typename Sp> MVect<Sp> MVect<Sp>::Inv() const
 {
   if (this->cbegin() == this->cend())
     throw std::overflow_error("Division by empty multi-vector.");
+
   auto it=this->cbegin();
-  if (it->first.Grade() == this->crbegin()->first.Grade())
+  if ((it->first.Grade() == this->crbegin()->first.Grade()) && ((it->first.Grade() < 2) || (it->first.Grade() > Sp::Dim-2)))
   // This is a blade.
   {
-    R r=((*this)*(*this))[0];
+    MVect mvr=this->Rev();
+    R r=((*this)*mvr)[0];
     if (r == 0.0)
       throw std::overflow_error("Division by zero blade.");
-    return (1.0/r)*(*this);
+    return mvr/r;
   }
 /*
   nat nOddEven=0;
+  auto it=this->cbegin();
   for (; it != this->cend(); ++it)
     nOddEven |= it->first.Grade() & 1? 2 : 1;
   if (nOddEven != 3)
   // Should be a versor.
   {
-    std::cout << "V";
+//    std::cout << "V*";
     MVect mvr=Rev();
     R r=((*this)*mvr)[0];
     if (r == 0.0)
       throw std::overflow_error("Division by zero versor.");
-    return (1.0/r)*mvr;
+    return mvr/r;
   }
 */
   // General solution.
@@ -886,16 +853,29 @@ template<typename Sp> std::ostream& operator <<(std::ostream& os, const BElem<Sp
     return os << "1";
   if (nBits == Sp::I)
     return os << "I" << Sp::Dim;
-  if (Sp::Proj == 0)
-    ++n;
-  os << "e";
   nat nMask=1;
-  for (; nBits; ++n,nMask <<= 1)
+  if constexpr (Sp::Proj == 1)
+  {
+    if (nBits & 1)
+      os << "o";
+    nMask=2;
+  }
+  if constexpr (Sp::Proj > 1)
+  {
+    if (nBits & 1)
+      os << "p";
+    if (nBits & 2)
+      os << "n";
+    nMask=4;
+  }
+  if (nMask > nBits)
+    return os;
+  os << "e";
+  for (; nMask <= nBits; ++n,nMask <<= 1)
   {
     if (!(nBits & nMask))
       continue;
     os << n;
-    nBits &= ~nMask;
   }
   return os;
 }
@@ -1230,18 +1210,18 @@ template<typename Sp,typename Cosp> inline MVect<Sp> operator /(const MVect<Cosp
 {
   return mv1*mv2.Inv();
 }
-/** Calculates Grassmann regressive product (meet) of blades. */
+/** Calculates Grassmann regressive product (meet). */
 template<typename Sp> inline MVect<Sp> Meet(const MVect<Sp>& mv1, const MVect<Sp>& mv2)
 {
   return ~((~mv1)^(~mv2));
 }
 /*===========================================================================*\
 */ /**
-  Calculates Grassmann regressive product (meet) of blades, using alternative dual spaces.
+  Calculates Grassmann regressive product (meet), using alternative dual spaces.
 
   @param mv1,mv2 Multi-vector operands.
   @param dual Method to calculate dual basis elements.
-  @return  Returns regressive product (meet) of blades.
+  @return  Returns regressive product (meet).
 */
 template<typename Sp> inline MVect<Sp> Meet(const MVect<Sp>& mv1, const MVect<Sp>& mv2, auto dual)
 {
