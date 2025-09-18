@@ -173,7 +173,7 @@ public:
   @param lst Initialization list.
   @return Point.
   */
-  static MVect<Space> Point(const std::array<R,_Pos+_Neg>& lst = {}) requires (Proj > 1)
+  static MVect<Space> Point(const std::array<R,_Pos+_Neg>& lst = {}) requires (Proj == 2)
   {
     MVect<Space> mv=Vector(lst);
     R s2=0.0;
@@ -185,11 +185,28 @@ public:
     return mv;
   }
   /**
+  Get origin point in projection space.
+
+  @return Point at origin.
+  */
+  static constexpr MVect<Space> Origin() requires (Proj == 1) { return MVect<Space>(1); }
+  /**
+  Get origin point in conformal space.
+
+  @return Point at origin.
+  */
+  static constexpr MVect<Space> Origin() requires (Proj == 2)
+  {
+    MVect<Space> mv(2);
+    mv.p(1.0);
+    return 0.5*mv;
+  }
+  /**
   Get infinite point in conformal space.
 
   @return Point at infinity.
   */
-  static constexpr MVect<Space> Infinity() requires (Proj > 1)
+  static constexpr MVect<Space> Infinity() requires (Proj == 2)
   {
     MVect<Space> mv(2);
     mv.p(-1.0);
@@ -471,9 +488,9 @@ public:
   /** Point weight in projective space. */
   void w(real val) requires (Sp::Proj == 1) {(*this)[BElem<Sp>(Sp::vect,Sp::weight)]=val;}
   /** Positive weight in conformal space. */
-  void p(real val) requires (Sp::Proj > 1) {(*this)[BElem<Sp>(Sp::vect,Sp::weight)]=val;}
+  void p(real val) requires (Sp::Proj == 2) {(*this)[BElem<Sp>(Sp::vect,Sp::weight)]=val;}
   /** Negative weight in conformal space. */
-  void n(real val) requires (Sp::Proj > 1) {(*this)[BElem<Sp>(Sp::vect,Sp::weight+1)]=val;}
+  void n(real val) requires (Sp::Proj == 2) {(*this)[BElem<Sp>(Sp::vect,Sp::weight+1)]=val;}
   /** Time in Minkovsky space or equivalent to x coordinate. */
   void t(real val) {(*this)[BElem<Sp>(Sp::vect,Sp::time)]=val;}
   /** X coordinate. */
@@ -496,13 +513,13 @@ public:
   /** Point weight in projective space. */
   R w() const requires (Sp::Proj == 1) {auto it=this->find(BElem<Sp>(Sp::vect,Sp::weight)); return (it == this->cend()? 0 : it->second);}
   /** Point weight in conformal space. */
-  R w() const requires (Sp::Proj > 1) {return p()+n();}
+  R w() const requires (Sp::Proj == 2) {return p()+n();}
   /** Positive weight in conformal space. */
-  R p() const requires (Sp::Proj > 1) {auto it=this->find(BElem<Sp>(Sp::vect,Sp::weight)); return it == this->cend()? 0 : it->second;}
+  R p() const requires (Sp::Proj == 2) {auto it=this->find(BElem<Sp>(Sp::vect,Sp::weight)); return it == this->cend()? 0 : it->second;}
   /** Negative weight in conformal space. */
-  R n() const requires (Sp::Proj > 1) {auto it=this->find(BElem<Sp>(Sp::vect,Sp::weight+1)); return it == this->cend()? 0 : it->second;}
+  R n() const requires (Sp::Proj == 2) {auto it=this->find(BElem<Sp>(Sp::vect,Sp::weight+1)); return it == this->cend()? 0 : it->second;}
   /** Weight at infinity in conformal space. */
-  R i() const requires (Sp::Proj > 1) {return 0.5*(n()-p());}
+  R i() const requires (Sp::Proj == 2) {return 0.5*(n()-p());}
   /** Time in Minkovsky space. */
   R t() const {auto it=this->find(BElem<Sp>(Sp::vect,Sp::time)); return it == this->cend()? 0 : it->second; }
   /** X coordinate. */
@@ -860,7 +877,7 @@ template<typename Sp> std::ostream& operator <<(std::ostream& os, const BElem<Sp
       os << "o";
     nMask=2;
   }
-  if constexpr (Sp::Proj > 1)
+  if constexpr (Sp::Proj == 2)
   {
     if (nBits & 1)
       os << "p";
